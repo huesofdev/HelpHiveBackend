@@ -6,7 +6,11 @@ class AdminService {
     this.adminRepository = adminRepository;
   }
 
-  async createAdminUser(data) {
+  async createAdminUser(data, session) {
+    if (session) {
+      throw new Error("Please Logout And Try Again");
+    }
+
     const { name, email, password } = data;
 
     // Check required fields first
@@ -32,7 +36,12 @@ class AdminService {
     return generateUserToken(Newuser);
   }
 
-  async authenticateAdmin(email, password) {
+  //For authenticating the admin
+
+  async authenticateAdmin(email, password, session) {
+    if (session) {
+      throw new Error(`You have Already Logged in As ${session.name}`);
+    }
     if (!email || !password) {
       throw new Error("Please enter a valid email and password.");
     }
@@ -58,19 +67,31 @@ class AdminService {
     return this.adminRepository.findUserById(id);
   }
 
-  async approveNgo(ngoId, status) {
+  async approveNgo(ngoId, status, session) {
+    if (session?.role !== "admin") {
+      throw new Error("You Must Be An Admin To Approve Ngos");
+    }
     return this.adminRepository.approveNgo(ngoId, status);
   }
 
-  async banUser(userId) {
+  async banUser(userId, session) {
+    if (session?.role !== "admin") {
+      throw new Error("You Must Be An Admin To Ban Users");
+    }
     return this.adminRepository.banUser(userId);
   }
 
-  async listPendingNgos() {
+  async listPendingNgos(session) {
+    if (session?.role !== "admin") {
+      throw new Error("You Must Be An Admin To list all Pending Ngos");
+    }
     return this.adminRepository.findPendingNgos();
   }
 
-  async listUsersByRole(role) {
+  async listUsersByRole(role, session) {
+    if (session?.role !== "admin") {
+      throw new Error("You Must Be An Admin To List Users");
+    }
     return this.adminRepository.findUsersByRole(role);
   }
 }

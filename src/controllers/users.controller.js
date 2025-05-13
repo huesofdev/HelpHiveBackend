@@ -39,39 +39,32 @@ async function getUserProfile(req, res) {
 
 async function LoginAuthentication(req, res) {
   try {
-    if (req.session) {
-      return res.status(400).json({
-        success: false,
-        message: `Already Logged in as ${req.session.name}`,
-        data: [],
-      });
-    }
+    const session = req?.session;
     const email = req.body.email;
     const password = req.body.password;
-    const result = await userService.authenticateUser(email, password);
+    const result = await userService.authenticateUser(email, password, session);
 
     return res.status(200).json({
       success: true,
       data: result,
+      message: "sucessfully logged in",
     });
   } catch (error) {
     return res.status(500).json({
       success: false,
-      message: error.message,
+      message: "sorry we can't able to authenticate ur credentials",
+      error: error.message,
+      data: [],
     });
   }
 }
 
 async function updateUserDetails(req, res) {
   try {
-    const user = await userService.getUserProfile(id);
-    id = req.params.id;
-    updateData = req.body;
-    if (!user) {
-      throw new Error("there is no such user");
-    }
+    const session = req?.session;
+    const updateData = req.body;
 
-    const updatedUser = await userService.updateUserProfile(id, updateData);
+    const updatedUser = await userService.updateUserProfile(session, updateData);
     return res.status(200).json({
       success: true,
       message: `sucessfully updated the user Profile`,

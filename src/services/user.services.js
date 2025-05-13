@@ -56,7 +56,11 @@ class UserService {
     return generateUserToken(user);
   }
 
-  updateUserProfile = async (userId, updateData) => {
+  updateUserProfile = async (session, updateData) => {
+    if(!session){
+      throw new Error("please login to update your profile")
+    }
+    const userId = session.id;
     return await this.userRepository.updateUser(userId, updateData);
   };
 }

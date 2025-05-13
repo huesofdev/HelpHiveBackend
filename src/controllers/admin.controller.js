@@ -6,7 +6,8 @@ const adminService = new AdminService(new AdminRepository());
 async function createAdminUser(req, res) {
   try {
     const adminData = req.body;
-    const jwt = await adminService.createAdminUser(adminData);
+    const session = req?.session;
+    const jwt = await adminService.createAdminUser(adminData, session);
     return res.status(200).json({
       success: true,
       message: `Admin User Created Successfully`,
@@ -24,15 +25,9 @@ async function createAdminUser(req, res) {
 
 async function adminAuthentication(req, res) {
   try {
-    if (req.session) {
-      return res.status(200).json({
-        success: true,
-        message: `Already Logged in As ${req.session.name}`,
-        data: req.session,
-      });
-    }
+    const session = req?.session;
     const { email, password } = req.body;
-    const jwt = await adminService.authenticateAdmin(email, password);
+    const jwt = await adminService.authenticateAdmin(email, password, session);
     return res.status(200).json({
       success: true,
       message: "Successfully Logged In",
@@ -50,14 +45,8 @@ async function adminAuthentication(req, res) {
 
 async function ngoRequestApproval(req, res) {
   try {
-    console.log(req.session);
-    if (req.session.role !== "admin") {
-      throw new Error(
-        "you must be an admin user inorder to request or approve"
-      );
-    }
-    const ngoId = req.params.id;
-    const status = req.body.status;
+    const ngoId = req.params?.id;
+    const status = req.body?.status;
 
     const user = await adminService.getNgoProfile(ngoId);
     if (
@@ -71,72 +60,104 @@ async function ngoRequestApproval(req, res) {
     if (status !== "approved" && status !== "rejected") {
       throw new Error("please use a valid status");
     }
-    const result = await adminService.approveNgo(ngoId, status);
+    const result = await adminService.approveNgo(ngoId, status, session);
     return res.status(200).json({
       success: true,
-      message: `${result.ngoApprovalStatus} successfully`,
+      message: `We ${result.ngoApprovalStatus} the Ngo successfully`,
+      data: [],
     });
   } catch (error) {
     return res.status(500).json({
       success: false,
-      message: error.message,
+      message: "Sorry We can't Able to Approve Or Reject the Ngo Right Now",
+      error: error.message,
+      data: [],
     });
   }
 }
 
 async function banUser(req, res) {
   try {
+    const session = req?.session;
     const id = req.params.id;
-    const user = adminService.getUserProfile(id);
+    const user = adminService.getUserProfile(id, session);
     if (!user) {
-      throw new Error("there is no such users");
+      throw new Error("No User Found");
     }
     if (user.status === "banned") {
-      throw new Error("user is already banned");
+      throw new Error("User Is Already Banned");
     }
-    await userService.banUser(id);
+    await userService.banUser(id, session);
     return res.status(200).json({
       success: true,
-      message: `successfully banned the user ${user.name}`,
+      message: `Successfully Banned The User ${user.name}`,
+      data: [],
     });
   } catch (error) {
     return res.status(500).json({
       success: false,
-      message: error.message,
+      message: "We Can't Ban the User Right Now",
+      data: [],
+      error: error.message,
     });
   }
 }
 
 async function viewPendingNgos(req, res) {
   try {
-    const pendingNgos = await adminService.listPendingNgos();
+    const session = req?.session;
+    const pendingNgos = await adminService.listPendingNgos(session);
     return res.status(200).json({
       success: true,
       data: pendingNgos,
-      message: "successfully fetched all the pending ngos",
+      message: "Successfully Fetched All The Pending Ngos",
     });
   } catch (error) {
     res.status(500).json({
       success: false,
-      message: error.message,
+      message: "We Can't Fetch All The Pending Ngos Right Now",
+      error: error.message,
+      data: [],
     });
   }
 }
 
 async function getAdminProfile(req, res) {
   try {
-    const id = req.session.id;
     console.log(id);
     const user = await adminService.getAdminProfile(id);
     return res.status(200).json({
       success: true,
       data: user,
+      message: "Successfully Fetched the Admin Profile",
     });
   } catch (error) {
     return res.status(500).json({
       success: true,
-      message: error.message,
+      message: "Sorry We Can't Fetch The Admin Profile Right Now",
+      error: error.message,
+      data: []
     });
+  }
+}
+
+async function deleteUser(req, res) {
+  try {
+    const session = req?.session;
+    id = req.params?.id
+    const user = await adminService.deleteUser(id, session)
+    return res.status(200).json({
+      success: true,
+      message: `Successfully Deleted The User ${user?.name}`,
+      data: []
+    })
+  } catch (error) {
+    return res.status(500).json({
+      success: false,
+      mesage: "Can't Delete the User Right Now",
+      error: error.mesage,
+      data: []
+    })
   }
 }
 
@@ -147,4 +168,5 @@ module.exports = {
   getAdminProfile,
   createAdminUser,
   adminAuthentication,
+  deleteUser
 };

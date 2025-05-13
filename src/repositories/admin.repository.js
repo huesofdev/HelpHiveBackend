@@ -19,7 +19,7 @@ class AdminRepository {
 
   async findUserByEmail(email) {
     return await User.findOne({ email });
-  }ds
+  }
 
   async findUserById(id) {
     return await User.findById(id);

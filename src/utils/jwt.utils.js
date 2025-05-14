@@ -36,7 +36,6 @@ const verifyJwt = (req, res, next) => {
     }
 
     req.session = decoded;
-    console.log(req.session);
     next();
   });
 };

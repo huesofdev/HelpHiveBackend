@@ -47,6 +47,7 @@ async function ngoRequestApproval(req, res) {
   try {
     const ngoId = req.params?.id;
     const status = req.body?.status;
+    const session = req?.session;
 
     const user = await adminService.getNgoProfile(ngoId);
     if (
@@ -136,7 +137,7 @@ async function getAdminProfile(req, res) {
       success: true,
       message: "Sorry We Can't Fetch The Admin Profile Right Now",
       error: error.message,
-      data: []
+      data: [],
     });
   }
 }
@@ -144,20 +145,20 @@ async function getAdminProfile(req, res) {
 async function deleteUser(req, res) {
   try {
     const session = req?.session;
-    id = req.params?.id
-    const user = await adminService.deleteUser(id, session)
+    id = req.params?.id;
+    const user = await adminService.deleteUser(id, session);
     return res.status(200).json({
       success: true,
       message: `Successfully Deleted The User ${user?.name}`,
-      data: []
-    })
+      data: [],
+    });
   } catch (error) {
     return res.status(500).json({
       success: false,
       mesage: "Can't Delete the User Right Now",
       error: error.mesage,
-      data: []
-    })
+      data: [],
+    });
   }
 }
 
@@ -168,5 +169,5 @@ module.exports = {
   getAdminProfile,
   createAdminUser,
   adminAuthentication,
-  deleteUser
+  deleteUser,
 };
